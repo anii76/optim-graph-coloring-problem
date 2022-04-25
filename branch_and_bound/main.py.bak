@@ -142,7 +142,7 @@ def main():
     # p edge 87 406(812) data6 solution optimale : 11, david.col
     # p edge 23 71 data7 solution optimale : 5, myciel4.col
     # p edge 49, 476(952) data8 solution optimale : 7, queen7_7.col
-    M = np.genfromtxt("../Benchmark/data7.txt")
+    M = np.genfromtxt("./data7.txt")
     M = M[:, 1:]
     nb_sommets = len(M)
     g = Graph(nb_sommets)
