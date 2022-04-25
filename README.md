@@ -1,1 +1,1 @@
-# OPTIMISATION
+# Graph coloring problem
