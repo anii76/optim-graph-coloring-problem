@@ -132,7 +132,13 @@ def main():
     # p edge 49, 476(952) data8 solution optimale : 7, queen7_7.col
     M = np.genfromtxt("../Benchmark/data7.txt")
     M = M[:, 1:]
-    nb_sommets = len(M)
+    y = []
+    for i in M: 
+        y.append(int(i[0]))
+        y.append(int(i[1]))
+
+    nb_sommets = max(y)
+
     g = Graph(nb_sommets)
     for i in M:
         g.add_edge(int(i[0]) - 1, int(i[1]) - 1)
@@ -142,19 +148,8 @@ def main():
     end_time = time.time()
     ExecTime = end_time - start_time
     print("Temps d'exécution en secondes = ", ExecTime)
-    
-def main_test():
-    M = np.genfromtxt("./Benchmark/data7.txt")
-    M = M[:, 1:]
-    nb_sommets = len(M)
-    g = Graph(nb_sommets)
-    for i in M:
-        g.add_edge(int(i[0]) - 1, int(i[1]) - 1)
-    
-    for i in g.adjMatrix:
-        print(i)
 
 
 if __name__ == '__main__':
     main()
-    #main_test()
+
