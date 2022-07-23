@@ -36,7 +36,6 @@ class Graph(object):
                 print('')
             print(self.adjMatrix)
 
-
 def voisins(G, i):
     M = G.adjMatrix
     listeVoisins = []
@@ -46,7 +45,6 @@ def voisins(G, i):
             listeVoisins.append(j)
 
     return (listeVoisins)
-
 
 def trier(G):
     # trier les sommets de G selon l'ordre décroissant de leurs degrés
@@ -60,51 +58,61 @@ def trier(G):
     D = list(np.array(degrees)[:,0])
     return D
 
+def removeNeighboringColors(G, sommet, colorsPossible, colorsAlreadyUsed):
+    v=voisins(G, sommet)
+    for j in range(len(v)):
+            if (colorsAlreadyUsed[v[j] ]!=-1 and (colorsAlreadyUsed[v[j]] in colorsPossible)):
+                colorsPossible.remove(colorsAlreadyUsed[v[j]] ) 
+
+def nextPossibleColor(G, sommet, lastCheckedColor, verticesAlreadyColored, upperbound):
+    v = voisins(G, sommet)
+    nextColorIsFound = False
+
+    for nextColor in range(lastCheckedColor + 1, upperbound + 1):
+        if (not nextColorIsFound) :
+            nextColorIsFound = True
+            for voisin in v:
+                if (verticesAlreadyColored[voisin] == nextColor):
+                    nextColorIsFound = False
+                    break
+            if nextColorIsFound : return nextColor
+    return -1
 
 def GCPbranchbound(G):
-    #print(G.adjMatrix)
-    ColorsPossib = []
-    L = []
-    colors = []
     #trier les sommets du graphe selon l'ordre décroissant de leurs degrés
     D = trier(G)
     Update = True
     nbresommet = len(G.adjMatrix)
-    i = 1
+    i = 1 
     #initialiser la borne inf au nbr de sommets
     upperbound = nbresommet
     #var intermédiaire pour mettre à jour les bornes
     L = [-1 for i in range(nbresommet)]
-    ColorsPossib = [[] for i in range(nbresommet)]
+    #on a encore vérifié aucune couleur
+    lastCheckedColor = [0 for i in range(nbresommet)]
     colors = [-1 for i in range(nbresommet)]
     L[0] = 1
     #initialiser la borne inf à 1
     lowerbound = 1  # couleur
     #initialiser toutes les couleurs à null
-    ColorsPossib.append(-1)
     #assigner la couleur 1 au 1er sommet
     colors[D[0]] = 1
-    #print(D)
 
     while i > 0: #génerer des solutions tant que la racine n'est pas encore atteinte
+        
         if Update: #calculer l'ensemble U contenant les couleurs possibles (on enlève celles des voisins)
-            ColorsPossib[D[i]] = [j + 1 for j in range(lowerbound  + 1)]
-            v = voisins(G, D[i]) #génerer les voisins du sommet
-            for j in range(len(v)):
-                if colors[v[j]] != -1 and (colors[v[j]] in ColorsPossib[D[i]]):
-                    ColorsPossib[D[i]].remove(colors[v[j]])
-
-        if ColorsPossib[D[i]] == []: #si pas de couleur possible pour le sommet on remonte et on met à jour la borne inf
+            colorToCheck = nextPossibleColor(G, D[i], lastCheckedColor[D[i]], colors, upperbound)
+        
+        if colorToCheck == -1: #si pas de couleur possible pour le sommet on remonte et on met à jour la borne inf
             i = i - 1
             lowerbound  = L[D[i]]
             Update = False
         else: #sinon, on affecte au sommet la plus petite couleur possible à partir de l'ensemble U
-            j = ColorsPossib[D[i]][0]
-            if colors[D[i]] == -1:
-               colors[D[i]] = j
-            # print('cc i=',i,'   ',j)
-            ColorsPossib[D[i]].remove(j) #retirer la couleur affectée au sommet de l'ensemble U
-            # print('k=',k)
+            if colors[D[i]] == -1 :
+                j = nextPossibleColor(G, D[i], lastCheckedColor[D[i]], colors, upperbound)
+                colors[D[i]] = j
+                lastCheckedColor[D[i]] = j
+    
             if (j < upperbound): #tester si la couleur affectée < la borne sup
                 if (j > lowerbound ):#tester si la couleur affectée > la borne inf
                     lowerbound = lowerbound  + 1 #mettre à jour la borne inf après l'ajour du couleur du sommet
@@ -124,13 +132,12 @@ def GCPbranchbound(G):
                 i = i - 1 #élager la branche actuelle et remonter
                 lowerbound = L[D[i]] #remettre la dernière valeur de la borne sup
                 Update = False
-    print('colors', colors)
+
     diffcolors = [] #calculer le nombre de couleurs utilisées
     for i in (colors):
         if i not in diffcolors:
             diffcolors.append(i)
-    print("le nombre de couleurs utilisées est: ", len(diffcolors))
-
+    print("Num colors : ", len(diffcolors))
 
 def main():
     # p edge 496 11654 data1 solution optimale : 65, fpsol2.i.1.col
@@ -144,7 +151,14 @@ def main():
     # p edge 49, 476(952) data8 solution optimale : 7, queen7_7.col
     M = np.genfromtxt("../Benchmark/data7.txt")
     M = M[:, 1:]
-    nb_sommets = len(M)
+
+    y = []
+    for i in M: 
+        y.append(int(i[0]))
+        y.append(int(i[1]))
+
+    nb_sommets = max(y)
+    
     g = Graph(nb_sommets)
     for i in M:
         g.add_edge(int(i[0]) - 1, int(i[1]) - 1)
@@ -154,7 +168,6 @@ def main():
     end_time = time.time()
     ExecTime = end_time - start_time
     print("Temps d'exécution en secondes = ", ExecTime)
-
 
 if __name__ == '__main__':
     main()
